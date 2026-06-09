@@ -22,7 +22,7 @@
             max-width: 900px;
             display: flex;
             gap: 20px;
-            flex-wrap: wrap; /* 화면이 좁아지면 아래로 자연스럽게 내려갑니다 */
+            flex-wrap: wrap;
         }
         .input-box {
             flex: 1;
@@ -127,16 +127,15 @@
     <script>
         var mapContainer = document.getElementById('map'), 
             mapOption = {
-                center: new kakao.maps.LatLng(33.450701, 126.570667), // 초기 중심좌표
+                center: new kakao.maps.LatLng(33.450701, 126.570667), 
                 level: 5 
             };
 
-        // 지도 생성
         var map = new kakao.maps.Map(mapContainer, mapOption);
         var geocoder = new kakao.maps.services.Geocoder();
         var currentMarker = null; 
 
-        // [기능 1] WTM 좌표로 검색할 때 -> 위경도로 변환하여 지도 표시 + 위경도 입력창 자동 완성
+        // WTM -> WGS84 변환 및 검색
         function searchByWtm() {
             var x = parseFloat(document.getElementById('wtmX').value);
             var y = parseFloat(document.getElementById('wtmY').value);
@@ -146,17 +145,14 @@
                 return;
             }
 
-            // WTM -> WGS84 변환 실행
             geocoder.transCoord(x, y, function(result, status) {
                 if (status === kakao.maps.services.Status.OK) {
-                    var lat = result[0].y; // 위도
-                    var lng = result[0].x; // 경도
+                    var lat = result[0].y; 
+                    var lng = result[0].x; 
 
-                    // 1. 오른쪽 위경도 입력창에 변환된 값 자동으로 채워넣기 (소수점 6자리 설정)
                     document.getElementById('wgsLat').value = lat.toFixed(6);
                     document.getElementById('wgsLng').value = lng.toFixed(6);
 
-                    // 2. 지도 이동 및 마커 표시
                     var latlng = new kakao.maps.LatLng(lat, lng);
                     displayMarkerAndMove(latlng);
                 } else {
@@ -168,7 +164,7 @@
             });
         }
 
-        // [기능 2] 위경도 좌표로 검색할 때 -> 지도 즉시 이동 + WTM으로 역변환하여 WTM 입력창 자동 완성
+        // WGS84 -> WTM 변환 및 검색
         function searchByWgs() {
             var lat = parseFloat(document.getElementById('wgsLat').value);
             var lng = parseFloat(document.getElementById('wgsLng').value);
@@ -179,17 +175,13 @@
             }
 
             var latlng = new kakao.maps.LatLng(lat, lng);
-            
-            // 1. 지도 이동 및 마커 표시를 먼저 실행 (딜레이 최소화)
             displayMarkerAndMove(latlng);
 
-            // 2. WGS84 -> WTM 역변환 실행 (주의: transCoord에서 x축은 경도(lng), y축은 위도(lat)입니다)
             geocoder.transCoord(lng, lat, function(result, status) {
                 if (status === kakao.maps.services.Status.OK) {
                     var wtmX = result[0].x;
                     var wtmY = result[0].y;
 
-                    // 왼쪽 WTM 입력창에 역변환된 값 자동으로 채워넣기 (소수점 2자리 설정)
                     document.getElementById('wtmX').value = wtmX.toFixed(2);
                     document.getElementById('wtmY').value = wtmY.toFixed(2);
                 } else {
@@ -201,10 +193,10 @@
             });
         }
 
-        // 마커 표시 및 지도 중심 이동 공통 함수
+        // 마커 표시 및 지도 이동 공통 함수
         function displayMarkerAndMove(latlng) {
             if (currentMarker) {
-                currentMarker.setMap(null); // 기존 마커 지우기
+                currentMarker.setMap(null); 
             }
 
             currentMarker = new kakao.maps.Marker({
