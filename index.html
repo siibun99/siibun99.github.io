@@ -2,181 +2,26 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>좌표 검색기 - WGS84 / WTM</title>
+  <title>안녕하세요</title>
   <style>
-    body { font-family: 'Malgun Gothic', dotum, sans-serif; margin: 20px; background: #f7f7f7; }
-    h2 { color: #333; }
-    /* 상단 패널 max-width를 조금 넓혀서 3개의 박스가 잘 들어가도록 조절했습니다 */
-    .panel { display: flex; gap: 16px; flex-wrap: wrap; background: white; padding: 16px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 16px; max-width: 900px; }
-    .box { border: 1px solid #ddd; border-radius: 8px; padding: 15px; flex: 1; min-width: 250px; background: #fcfdfd; }
-    .box h3 { margin-top: 0; margin-bottom: 12px; font-size: 15px; color: #4A90E2; }
-    .input-group { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .input-group span { font-size: 13px; font-weight: bold; width: 40px; color: #555; }
-    input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex: 1; width: 100%; }
-    /* 초기 지도의 기본 크기 */
-    #map { width: 720px; height: 400px; border-radius: 10px; border: 1px solid #ddd; transition: all 0.2s ease; }
+    body { font-family: 'Malgun Gothic', dotum, sans-serif; margin: 40px; background: #f7f7f7; color: #333; }
+    .container { background: white; padding: 30px; border-radius: 10px; border: 1px solid #ddd; max-width: 500px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    h1 { font-size: 24px; margin-bottom: 20px; }
+    ol { padding-left: 20px; margin-top: 15px; }
+    li { margin-bottom: 12px; font-size: 16px; }
+    a { color: #4A90E2; text-decoration: none; font-weight: bold; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
-<h2>카카오맵 실시간 좌표 검색기</h2>
-
-<div class="panel">
-  <div class="box">
-    <h3>WGS84 위경도</h3>
-    <div class="input-group">
-      <span>위도:</span>
-      <input id="lat" type="number" step="any" placeholder="위도(Lat)" value="33.450701">
-    </div>
-    <div class="input-group">
-      <span>경도:</span>
-      <input id="lng" type="number" step="any" placeholder="경도(Lng)" value="126.570667">
-    </div>
-  </div>
-
-  <div class="box">
-    <h3>WTM 좌표</h3>
-    <div class="input-group">
-      <span>X 축:</span>
-      <input id="wtmX" type="number" step="any" placeholder="WTM X">
-    </div>
-    <div class="input-group">
-      <span>Y 축:</span>
-      <input id="wtmY" type="number" step="any" placeholder="WTM Y">
-    </div>
-  </div>
-
-  <div class="box">
-    <h3>지도 크기 설정</h3>
-    <div class="input-group">
-      <span>가로:</span>
-      <input id="mapWidth" type="text" value="720px" placeholder="예: 720px">
-    </div>
-    <div class="input-group">
-      <span>세로:</span>
-      <input id="mapHeight" type="text" value="400px" placeholder="예: 400px">
-    </div>
-  </div>
-</div>
-
-<div id="map"></div>
-
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=535a4609bc0c9e85bc702625b75afa74&libraries=services&autoload=false"></script>
-<script>
-  var map, geocoder, marker;
-  var debounceTimer = null;
-
-  var latInput = document.getElementById('lat');
-  var lngInput = document.getElementById('lng');
-  var wtmXInput = document.getElementById('wtmX');
-  var wtmYInput = document.getElementById('wtmY');
+<div class="container">
+  <h1>안녕하세요. 반갑습니다. 😊</h1>
   
-  // 크기 조절 인풋 변수
-  var mapWidthInput = document.getElementById('mapWidth');
-  var mapHeightInput = document.getElementById('mapHeight');
-
-  kakao.maps.load(function() {
-    var mapContainer = document.getElementById('map');
-    var defaultPosition = new kakao.maps.LatLng(33.450701, 126.570667);
-
-    map = new kakao.maps.Map(mapContainer, {
-      center: defaultPosition,
-      level: 4
-    });
-
-    marker = new kakao.maps.Marker({
-      position: defaultPosition,
-      map: map
-    });
-
-    geocoder = new kakao.maps.services.Geocoder();
-    
-    updateFromWGS84();
-  });
-
-  // 🛠️ 실시간 지도 크기 변경 함수
-  function resizeMap() {
-    var mapContainer = document.getElementById('map');
-    
-    // 입력된 값을 스타일에 그대로 반영 (px이나 % 단위까지 포함되므로 text 타입 처리)
-    mapContainer.style.width = mapWidthInput.value;
-    mapContainer.style.height = mapHeightInput.value;
-    
-    // 카카오맵 래퍼가 바뀐 크기를 인지하도록 relayout 호출 후 마커 중심으로 재정렬
-    if (map) {
-      map.relayout();
-      if (marker) {
-        map.setCenter(marker.getPosition());
-      }
-    }
-  }
-
-  function moveMap(lat, lng) {
-    var position = new kakao.maps.LatLng(lat, lng);
-    marker.setPosition(position);
-    map.setCenter(position);
-  }
-
-  function debounce(callback) {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(callback, 300);
-  }
-
-  function updateFromWGS84() {
-    debounce(function() {
-      if (!geocoder) return; 
-
-      var lat = parseFloat(latInput.value);
-      var lng = parseFloat(lngInput.value);
-      if (isNaN(lat) || isNaN(lng)) return;
-      
-      moveMap(lat, lng);
-      
-      geocoder.transCoord(lng, lat, function(result, status) {
-        if (status === kakao.maps.services.Status.OK) {
-          wtmXInput.value = result[0].x.toFixed(2);
-          wtmYInput.value = result[0].y.toFixed(2);
-        }
-      }, {
-        input_coord: kakao.maps.services.Coords.WGS84,
-        output_coord: kakao.maps.services.Coords.WTM
-      });
-    });
-  }
-
-  function updateFromWTM() {
-    debounce(function() {
-      if (!geocoder) return;
-
-      var wtmX = parseFloat(wtmXInput.value);
-      var wtmY = parseFloat(wtmYInput.value);
-      if (isNaN(wtmX) || isNaN(wtmY)) return;
-      
-      geocoder.transCoord(wtmX, wtmY, function(result, status) {
-        if (status === kakao.maps.services.Status.OK) {
-          var lng = result[0].x;
-          var lat = result[0].y;
-          latInput.value = lat.toFixed(6); 
-          lngInput.value = lng.toFixed(6); 
-          moveMap(lat, lng);
-        }
-      }, {
-        input_coord: kakao.maps.services.Coords.WTM,
-        output_coord: kakao.maps.services.Coords.WGS84
-      });
-    });
-  }
-
-  // 좌표 입력 이벤트
-  latInput.addEventListener('input', updateFromWGS84);
-  lngInput.addEventListener('input', updateFromWGS84);
-  wtmXInput.addEventListener('input', updateFromWTM);
-  wtmYInput.addEventListener('input', updateFromWTM);
-
-  // 🛠️ 크기 변경 이벤트 리스너 연결
-  mapWidthInput.addEventListener('input', resizeMap);
-  mapHeightInput.addEventListener('input', resizeMap);
-</script>
+  <ol>
+    <li><a href="coord.html">좌표 검색기</a></li>
+  </ol>
+</div>
 
 </body>
 </html>
