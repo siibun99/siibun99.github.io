@@ -123,20 +123,28 @@
 
     <div id="map"></div>
 
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=535a4609bc0c9e85bc702625b75afa74&libraries=services"></script>
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=535a4609bc0c9e85bc702625b75afa74&libraries=services&autoload=false"></script>
     <script>
-        var mapContainer = document.getElementById('map'), 
-            mapOption = {
-                center: new kakao.maps.LatLng(33.450701, 126.570667), 
-                level: 5 
-            };
+        // 전역 변수 선언
+        var map, geocoder, currentMarker;
 
-        var map = new kakao.maps.Map(mapContainer, mapOption);
-        var geocoder = new kakao.maps.services.Geocoder();
-        var currentMarker = null; 
+        // 카카오 지도 API가 완전히 로드된 후 실행되도록 보장합니다.
+        kakao.maps.load(function() {
+            var mapContainer = document.getElementById('map'), 
+                mapOption = {
+                    center: new kakao.maps.LatLng(33.450701, 126.570667), 
+                    level: 5 
+                };
+
+            map = new kakao.maps.Map(mapContainer, mapOption);
+            geocoder = new kakao.maps.services.Geocoder();
+            currentMarker = null; 
+        });
 
         // WTM -> WGS84 변환 및 검색
         function searchByWtm() {
+            if (!geocoder) return; // 아직 로드가 안 되었다면 실행 방지
+            
             var x = parseFloat(document.getElementById('wtmX').value);
             var y = parseFloat(document.getElementById('wtmY').value);
 
@@ -166,6 +174,8 @@
 
         // WGS84 -> WTM 변환 및 검색
         function searchByWgs() {
+            if (!geocoder) return; // 아직 로드가 안 되었다면 실행 방지
+
             var lat = parseFloat(document.getElementById('wgsLat').value);
             var lng = parseFloat(document.getElementById('wgsLng').value);
 
