@@ -4,17 +4,38 @@
   <meta charset="UTF-8">
   <title>좌표 검색기 - WGS84 / WTM</title>
   <style>
-    body { font-family: 'Malgun Gothic', dotum, sans-serif; margin: 20px; background: #f7f7f7; }
-    h2 { color: #333; }
-    .panel { display: flex; gap: 16px; flex-wrap: wrap; background: white; padding: 16px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 16px; max-width: 900px; }
-    .box { border: 1px solid #ddd; border-radius: 8px; padding: 15px; flex: 1; min-width: 250px; background: #fcfdfd; }
+    /* 🛠️ 변경: body에 flex 설정을 주어 내부 요소들을 화면 중앙으로 정렬 */
+    body { 
+      font-family: 'Malgun Gothic', dotum, sans-serif; 
+      margin: 20px; 
+      background: #f7f7f7; 
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* 가로 기준 중앙 정렬 */
+    }
+    h2 { color: #333; margin-bottom: 20px; }
+    
+    /* 🛠️ 변경: 패널이 중앙에서 자연스럽게 늘어나도록 width와 box-sizing 추가 */
+    .panel { 
+      display: flex; 
+      gap: 16px; 
+      flex-wrap: wrap; 
+      background: white; 
+      padding: 16px; 
+      border-radius: 10px; 
+      border: 1px solid #ddd; 
+      margin-bottom: 16px; 
+      width: 100%;
+      max-width: 900px; 
+      box-sizing: border-box; /* 패딩이 너비에 영향을 주지 않도록 설정 */
+    }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 15px; flex: 1; min-width: 250px; background: #fcfdfd; box-sizing: border-box; }
     .box h3 { margin-top: 0; margin-bottom: 12px; font-size: 15px; color: #4A90E2; }
     .input-group { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .input-group span { font-size: 13px; font-weight: bold; width: 40px; color: #555; }
-    input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex: 1; width: 100%; }
+    input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex: 1; width: 100%; box-sizing: border-box; }
     
-    /* 🛠️ 해결 1: 지도 크기가 변경될 때 버벅임과 타이밍 어긋남을 방지하기 위해 transition 제거 */
-    #map { width: 720px; height: 400px; border-radius: 10px; border: 1px solid #ddd; }
+    #map { width: 720px; height: 400px; border-radius: 10px; border: 1px solid #ddd; max-width: 100%; }
   </style>
 </head>
 <body>
@@ -93,14 +114,12 @@
     updateFromWGS84();
   });
 
-  // 🛠️ 실시간 지도 크기 변경 함수 수정
   function resizeMap() {
     var mapContainer = document.getElementById('map');
     
     var widthVal = mapWidthInput.value.trim();
     var heightVal = mapHeightInput.value.trim();
     
-    // 숫자만 입력했을 경우 뒤에 자동으로 'px'를 붙여주는 안전장치 추가
     if (/^\d+$/.test(widthVal)) widthVal += 'px';
     if (/^\d+$/.test(heightVal)) heightVal += 'px';
     
@@ -108,7 +127,6 @@
     mapContainer.style.height = heightVal;
     
     if (map) {
-      // transition이 없으므로 크기가 즉시 변경되어 relayout이 정확하게 작동합니다.
       map.relayout();
       if (marker) {
         map.setCenter(marker.getPosition());
@@ -172,14 +190,11 @@
     });
   }
 
-  // 좌표 입력 이벤트 (실시간 반영)
   latInput.addEventListener('input', updateFromWGS84);
   lngInput.addEventListener('input', updateFromWGS84);
   wtmXInput.addEventListener('input', updateFromWTM);
   wtmYInput.addEventListener('input', updateFromWTM);
 
-  // 🛠️ 해결 2: 크기 변경 이벤트 리스너를 'input'에서 'change'로 변경 방안 있음
-  // 입력창에서 포커스가 벗어나거나 엔터를 칠 때만 작동하여 오작동을 막습니다.
   mapWidthInput.addEventListener('input', resizeMap);
   mapHeightInput.addEventListener('input', resizeMap);
 </script>
